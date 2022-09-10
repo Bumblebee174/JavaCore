@@ -1,5 +1,8 @@
 package Lesson_2;
 
+import Lesson_2.Exceptions.MyArrayDataException;
+import Lesson_2.Exceptions.MyArraySizeException;
+
 import static java.lang.Integer.valueOf;
 
 public class MainClass {
