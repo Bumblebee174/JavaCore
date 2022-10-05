@@ -1,79 +1,48 @@
 package Lesson_7;
 
-import java.util.Collections;
+import Lesson_8.HttpUrl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
+
+import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class WeatherResponse {
+    public static final String API_KEY_PARAM = "apikey";
+    public static final String API_KEY = "L8jY9hzHqmGxBxDAAgmEUYztLuVwkgG5";
+    public static final String CURRENT_TOWN_KEY = "295212";
+    public static final String WEATHER_URL = "https://dataservice.accuweather.com/currentconditions/v1/" + CURRENT_TOWN_KEY;
 
-    private List<Weather> weather;
+    public static void main(String[] args) throws IOException {
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(WEATHER_URL).newBuilder();
+        urlBuilder.addQueryParameter(API_KEY_PARAM, API_KEY);
 
-    public WeatherResponse() {}
+        HttpUrl httpUrl = urlBuilder.build();
 
-    public WeatherResponse(String main, String description) {
-        this.weather = Collections.singletonList(new Weather(main, description));
-    }
+        Request.Builder requestBuilder = new Request.Builder();
 
-    public String getSummary() {
-        return weather.stream()
-                .map(w -> w.main + ": " + w.description)
-                .collect(Collectors.joining("\n"));
-    }
+        Request request = requestBuilder
+                .get()
+                .url(httpUrl)
+                .build();
 
-    public List<Weather> getWeather() {
-        return weather;
-    }
+        OkHttpClient client = new OkHttpClient();
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        WeatherResponse that = (WeatherResponse) o;
-        return Objects.equals(weather, that.weather);
-    }
+        Call call = client.newCall(request);
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(weather);
-    }
+        Response response = call.execute();
 
-    @Override
-    public String toString() {
-        return "WeatherResponse{" +
-                "weather=" + weather +
-                '}';
-    }
+        String responseBody = response.body().string();
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Weather {
-        private String main;
-        private String description;
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-        public Weather() {}
+        List<City> cities = objectMapper.readValue(responseBody, new TypeReference<List<City>>() {
+        });
 
-        public Weather(String main, String description) {
-            this.main = main;
-            this.description = description;
-        }
-
-        public String getMain() {
-            return main;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Weather weather = (Weather) o;
-            return Objects.equals(main, weather.main) &&
-                    Objects.equals(description, weather.description);
-        }
+        City city = cities.get(0);
 
         @Override
         public int hashCode() {
